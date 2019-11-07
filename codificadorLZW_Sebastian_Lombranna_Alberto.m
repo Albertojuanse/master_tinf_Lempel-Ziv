@@ -1,0 +1,4 @@
+function codificadorLZW_Sebastian_Lombranna_Alberto(filenameInputUncompressed,filenameOutputCompressed)
+%CODIFICADORLZW_SEBASTIAN_LOMBRANNA_ALBERTO This coder implements the Lempel-Ziv-Welch algorithm
+
+end
