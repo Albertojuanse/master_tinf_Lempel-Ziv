@@ -5,6 +5,7 @@ function codificadorLZ78_Sebastian_Lombranna_Alberto(filenameInputUncompressed,f
 
 input_file_id = fopen(filenameInputUncompressed, 'r');
 input = fread(input_file_id);
+% input = [116; 117; 116; 117; 118 ;116 ;117 ;118 ;119; 120; 116; 117];
 fclose(input_file_id);
 
 %% Variables
@@ -58,7 +59,7 @@ output = [];                        % Output
 
 % The algorithm will analyze each character one by one, using a pointers
 % for the entries analyzed
-while  input_pointer < input_size
+while  input_pointer <= input_size
     
     % Search the current input and following until a codeword can be
     % generated
@@ -131,17 +132,18 @@ while  input_pointer < input_size
         % No entry found
         dictionary{end + 1,1} = [input(input_pointer,1)];
         i_entry_found = size(dictionary,1);
-        input_pointer = input_pointer + 1;
-        i_next_input_after_entry = input_pointer ;
         
         % Compose the codeword        
-        output = [output i_entry_found input(i_next_input_after_entry,1)];
+        output = [output i_entry_found input(input_pointer,1)];
+        
+        % Update input pointer
+        input_pointer = input_pointer + 1;
 
     else
         % Entry found
         entry_found = dictionary{i_entry_found};
         if input_pointer + size(entry_found,2) +1 <= input_size
-            i_next_input_after_entry = input_pointer + size(entry_found,2) + 1;
+            i_next_input_after_entry = input_pointer + size(entry_found,2);
             next_input_after_entry = input(i_next_input_after_entry,1);
             dictionary{end + 1,1} = [entry_found next_input_after_entry];
         
@@ -156,15 +158,20 @@ while  input_pointer < input_size
             i_next_input_after_entry = input_pointer + size(entry_found,2);
             
             % Compose the codeword        
-            output = [output input(i_next_input_after_entry,1)];
+            output = [output i_entry_found];
         end
 
         % Depending of the value of pointer_offset alue, if the entry is
         % found and a new codeword is compose, the input_pointer must be
-        % uploaded
-        input_pointer = input_pointer + (size(entry_found,2) + 2);
+        % uploaded 
+        input_pointer = input_pointer + (size(entry_found,2) + 1);
     end
 
+end
+
+size_dictionary = size(dictionary, 1);
+for i_entry = 1:size_dictionary
+    dictionary{i_entry,1}
 end
 
 %% Save ASCII characters to output
