@@ -72,6 +72,8 @@ while  input_pointer <= input_size
     % For each entry of the dictionary
     candidate_entry_found = false;
     i_entry_found = -1;
+    size_dictionary = size(dictionary, 1);
+    
     for i_entry = 1:size_dictionary
         entry = dictionary{i_entry};
         entry_size = size(entry, 2);
@@ -93,7 +95,7 @@ while  input_pointer <= input_size
             else                    
                 % This character is not equals to th
                 candidate_entry_found = false;
-                break;                        
+                break;
 
             end
         end
@@ -118,16 +120,32 @@ while  input_pointer <= input_size
         % OJO: break en el momento que se finalice el diccionario
         % preinicializado; llevar un conteo
     end
-
-    % Compose the codeword
-    i_next_input_after_entry = input_pointer + size(dictionary{i_entry_found}) + 1;
-    output = [output i_entry_found input_pointer(i_next_input_after_entry)]
-
-    % Depending of the value of pointer_offset alue, if the entry is
-    % found and a new codeword is compose, the input_pointer must be
-    % uploaded
-    input_pointer =+ size(dictionary{i_entry_found}) + 2;
+    
+    % First execution special
+    if input_pointer == 1
         
+        % Upload the dictionary
+        dictionary = {[input(1)]};
+        input_pointer = 2;
+        
+        % Compose the codeword        
+        output = [output 1 [input(1)]
+    else
+        
+        % Upload the dictionary
+        entry_found = dictionary{i_entry_found};
+        i_next_input_after_entry = input_pointer + size(entry_found) + 1;
+        next_input_after_entry = input(i_next_input_after_entry);
+        dictionary{end + 1,1} = [entry_found next_input_after_entry];
+        
+        % Compose the codeword        
+        output = [output i_entry_found input_pointer(i_next_input_after_entry)]
+        
+        % Depending of the value of pointer_offset alue, if the entry is
+        % found and a new codeword is compose, the input_pointer must be
+        % uploaded
+        input_pointer =+ size(dictionary{i_entry_found}) + 2;
+    end
 end
 
 %% Save ASCII characters to output
