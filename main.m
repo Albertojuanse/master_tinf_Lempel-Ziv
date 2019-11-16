@@ -1,0 +1,1 @@
+codificadorLZ78_Sebastian_Lombranna_Alberto('input','coder_output');
