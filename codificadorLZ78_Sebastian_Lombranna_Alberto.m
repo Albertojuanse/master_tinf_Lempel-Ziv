@@ -77,7 +77,7 @@ while  input_pointer <= input_size
     for i_entry = 1:size_dictionary
         entry = dictionary{i_entry};
         entry_size = size(entry, 2);
-
+        
         % Inspec the entry for searching if the first character is the
         % searched one;
         % then, if so, verify the second character and so on.
@@ -89,9 +89,9 @@ while  input_pointer <= input_size
             % entry, the current+1 if its the second...                
             pointer_offset = (i_entry_character -1);
 
-            if character == input(input_pointer + pointer_offset)
+            if character == input(input_pointer + pointer_offset,1)
                 % This character is equals to the entry one.
-                candidate_entry_found = yes;
+                candidate_entry_found = true;
             else                    
                 % This character is not equals to th
                 candidate_entry_found = false;
@@ -102,7 +102,7 @@ while  input_pointer <= input_size
 
         % Refresh the entry found if this one is longer than the
         % previous one
-        if  candidate_entry_found
+        if candidate_entry_found
             if i_entry_found < 0
                 i_entry_found = i_entry;
             else
@@ -121,31 +121,32 @@ while  input_pointer <= input_size
         % preinicializado; llevar un conteo
     end
     
-    % First execution special
-    if input_pointer == 1
+    input_pointer
+    
+    % Upload the dictionary
+    if i_entry_found < 0
+        % No entry found
+        dictionary{end + 1,1} = [input(input_pointer,1)];
+        i_entry_found = 1;
+        input_pointer =+ 1;
+        i_next_input_after_entry = input_pointer ;
         
-        % Upload the dictionary
-        dictionary = {[input(1)]};
-        input_pointer = 2;
-        
-        % Compose the codeword        
-        output = [output 1 [input(1)]
     else
-        
-        % Upload the dictionary
+        % Entry found
         entry_found = dictionary{i_entry_found};
-        i_next_input_after_entry = input_pointer + size(entry_found) + 1;
-        next_input_after_entry = input(i_next_input_after_entry);
+        i_next_input_after_entry = input_pointer + size(entry_found,2) + 1;
+        next_input_after_entry = input(i_next_input_after_entry,1);
         dictionary{end + 1,1} = [entry_found next_input_after_entry];
-        
-        % Compose the codeword        
-        output = [output i_entry_found input_pointer(i_next_input_after_entry)]
-        
+
         % Depending of the value of pointer_offset alue, if the entry is
         % found and a new codeword is compose, the input_pointer must be
         % uploaded
-        input_pointer =+ size(dictionary{i_entry_found}) + 2;
+        input_pointer =+ size(dictionary{i_entry_found},2) + 2;
     end
+        
+    % Compose the codeword        
+    output = [output i_entry_found input(i_next_input_after_entry,1)];
+
 end
 
 %% Save ASCII characters to output
