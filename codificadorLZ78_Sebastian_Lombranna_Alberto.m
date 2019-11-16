@@ -3,7 +3,7 @@ function codificadorLZ78_Sebastian_Lombranna_Alberto(filenameInputUncompressed,f
 
 %% Retrieve ASCII characters from input
 
-input_file_id = fopen(filenameInputUncompressed);
+input_file_id = fopen(filenameInputUncompressed, 'r');
 input = fread(input_file_id);
 fclose(input_file_id);
 
@@ -58,7 +58,7 @@ output = [];                        % Output
 
 % The algorithm will analyze each character one by one, using a pointers
 % for the entries analyzed
-while  input_pointer < input_size - 1
+while  input_pointer < input_size
     
     % Search the current input and following until a codeword can be
     % generated
@@ -89,14 +89,20 @@ while  input_pointer < input_size - 1
             % entry, the current+1 if its the second...                
             pointer_offset = (i_entry_character - 1);
 
-            if character == input(input_pointer + pointer_offset,1)
-                % This character is equals to the entry one.
-                candidate_entry_found = true;
-            else                    
-                % This character is not equals to the entry one.
+            if input_pointer + pointer_offset <= input_size
+                if character == input(input_pointer + pointer_offset,1)
+                    % This character is equals to the entry one.
+                    candidate_entry_found = true;
+                else                    
+                    % This character is not equals to the entry one.
+                    candidate_entry_found = false;
+                    break;
+                end
+            else
+                % If the end of the input is reached, the entry to find is
+                % the one which is exactly the rest of the input, so find it 
                 candidate_entry_found = false;
                 break;
-
             end
         end
 
@@ -124,31 +130,45 @@ while  input_pointer < input_size - 1
     if i_entry_found < 0
         % No entry found
         dictionary{end + 1,1} = [input(input_pointer,1)];
-        i_entry_found = 1;
+        i_entry_found = size(dictionary,1);
         input_pointer = input_pointer + 1;
         i_next_input_after_entry = input_pointer ;
         
+        % Compose the codeword        
+        output = [output i_entry_found input(i_next_input_after_entry,1)];
+
     else
         % Entry found
         entry_found = dictionary{i_entry_found};
-        i_next_input_after_entry = input_pointer + size(entry_found,2) + 1;
-        next_input_after_entry = input(i_next_input_after_entry,1);
-        dictionary{end + 1,1} = [entry_found next_input_after_entry];
+        if input_pointer + size(entry_found,2) +1 <= input_size
+            i_next_input_after_entry = input_pointer + size(entry_found,2) + 1;
+            next_input_after_entry = input(i_next_input_after_entry,1);
+            dictionary{end + 1,1} = [entry_found next_input_after_entry];
+        
+            % Compose the codeword        
+            output = [output i_entry_found input(i_next_input_after_entry,1)];
+        else
+            % If the end of the input is reached, the entry to find is
+            % the one which is exactly the rest of the input and there is
+            % not a next entry; the file ends with the entry and so its not
+            % even. The decodifier wil bot find the next one and will asume
+            % that it's finished.
+            i_next_input_after_entry = input_pointer + size(entry_found,2);
+            
+            % Compose the codeword        
+            output = [output input(i_next_input_after_entry,1)];
+        end
 
         % Depending of the value of pointer_offset alue, if the entry is
         % found and a new codeword is compose, the input_pointer must be
         % uploaded
         input_pointer = input_pointer + (size(entry_found,2) + 2);
     end
-        
-    % Compose the codeword        
-    output = [output i_entry_found input(i_next_input_after_entry,1)];
 
 end
-output
 
 %% Save ASCII characters to output
-output_file_id = fopen(filenameOutputCompressed);
+output_file_id = fopen(filenameOutputCompressed, 'w');
 fwrite(output_file_id, output, 'uint8');
 fclose(output_file_id);
 
