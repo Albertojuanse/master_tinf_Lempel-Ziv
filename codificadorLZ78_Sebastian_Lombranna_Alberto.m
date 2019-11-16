@@ -58,11 +58,11 @@ output = [];                        % Output
 
 % The algorithm will analyze each character one by one, using a pointers
 % for the entries analyzed
-while  input_pointer <= input_size
+while  input_pointer < input_size - 1
     
     % Search the current input and following until a codeword can be
     % generated
-    % Sictionary schematic:
+    % Dictionary schematic:
     %   { [1]   ;
     %     [1 2] ;
     %     [2]   ;
@@ -87,21 +87,20 @@ while  input_pointer <= input_size
 
             % The input character analyzed is the current if is the first
             % entry, the current+1 if its the second...                
-            pointer_offset = (i_entry_character -1);
+            pointer_offset = (i_entry_character - 1);
 
             if character == input(input_pointer + pointer_offset,1)
                 % This character is equals to the entry one.
                 candidate_entry_found = true;
             else                    
-                % This character is not equals to th
+                % This character is not equals to the entry one.
                 candidate_entry_found = false;
                 break;
 
             end
         end
 
-        % Refresh the entry found if this one is longer than the
-        % previous one
+        % Refresh the entry found if this one is longer than the previous one
         if candidate_entry_found
             if i_entry_found < 0
                 i_entry_found = i_entry;
@@ -121,14 +120,12 @@ while  input_pointer <= input_size
         % preinicializado; llevar un conteo
     end
     
-    input_pointer
-    
     % Upload the dictionary
     if i_entry_found < 0
         % No entry found
         dictionary{end + 1,1} = [input(input_pointer,1)];
         i_entry_found = 1;
-        input_pointer =+ 1;
+        input_pointer = input_pointer + 1;
         i_next_input_after_entry = input_pointer ;
         
     else
@@ -141,13 +138,14 @@ while  input_pointer <= input_size
         % Depending of the value of pointer_offset alue, if the entry is
         % found and a new codeword is compose, the input_pointer must be
         % uploaded
-        input_pointer =+ size(dictionary{i_entry_found},2) + 2;
+        input_pointer = input_pointer + (size(entry_found,2) + 2);
     end
         
     % Compose the codeword        
     output = [output i_entry_found input(i_next_input_after_entry,1)];
 
 end
+output
 
 %% Save ASCII characters to output
 output_file_id = fopen(filenameOutputCompressed);
