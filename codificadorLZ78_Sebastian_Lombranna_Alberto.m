@@ -4,8 +4,8 @@ function codificadorLZ78_Sebastian_Lombranna_Alberto(filenameInputUncompressed,f
 %% Retrieve ASCII characters from input
 
 input_file_id = fopen(filenameInputUncompressed, 'r');
-input = fread(input_file_id);
-% input = [116; 117; 116; 117; 118 ;116 ;117 ;118 ;119; 120; 116; 117];
+input = fread(input_file_id, 'ubit8');
+input = [116; 117; 116; 117; 118 ;116 ;117 ;118 ;119; 120; 116; 117];
 fclose(input_file_id);
 
 %% Variables
@@ -14,7 +14,7 @@ input_size = size(input, 1);        % Total number of characters
 input_pointer = 1;                  % Points the current character analized
 pointer_offset = 0;                 % Offset for point the dictionaries
 dictionary = {};                    % Dictionary
-output = [];                        % Output
+output_file_id = fopen(filenameOutputCompressed, 'a');
 
 %% Algorithm description
 % coge la entrada i
@@ -133,8 +133,9 @@ while  input_pointer <= input_size
         dictionary{end + 1,1} = [input(input_pointer,1)];
         i_entry_found = size(dictionary,1);
         
-        % Compose the codeword        
-        output = [output i_entry_found input(input_pointer,1)];
+        % Compose the codeword
+        codeword = [i_entry_found input(input_pointer,1)];
+        fwrite(output_file_id, codeword,'ubit8');
         
         % Update input pointer
         input_pointer = input_pointer + 1;
@@ -148,7 +149,8 @@ while  input_pointer <= input_size
             dictionary{end + 1,1} = [entry_found next_input_after_entry];
         
             % Compose the codeword        
-            output = [output i_entry_found input(i_next_input_after_entry,1)];
+            codeword = [i_entry_found input(i_next_input_after_entry,1)];
+            fwrite(output_file_id, codeword,'ubit8');
         else
             % If the end of the input is reached, the entry to find is
             % the one which is exactly the rest of the input and there is
@@ -157,8 +159,9 @@ while  input_pointer <= input_size
             % that it's finished.
             i_next_input_after_entry = input_pointer + size(entry_found,2);
             
-            % Compose the codeword        
-            output = [output i_entry_found];
+            % Compose the codeword
+            codeword = [i_entry_found];
+            fwrite(output_file_id, codeword,'ubit8');
         end
 
         % Depending of the value of pointer_offset alue, if the entry is
@@ -169,14 +172,7 @@ while  input_pointer <= input_size
 
 end
 
-size_dictionary = size(dictionary, 1);
-for i_entry = 1:size_dictionary
-    dictionary{i_entry,1}
-end
-
-%% Save ASCII characters to output
-output_file_id = fopen(filenameOutputCompressed, 'w');
-fwrite(output_file_id, output, 'uint8');
+%% Close output file
 fclose(output_file_id);
 
 end
