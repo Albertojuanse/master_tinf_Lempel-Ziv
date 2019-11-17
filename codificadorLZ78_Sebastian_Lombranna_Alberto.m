@@ -5,7 +5,7 @@ function codificadorLZ78_Sebastian_Lombranna_Alberto(filenameInputUncompressed,f
 
 input_file_id = fopen(filenameInputUncompressed, 'r');
 input = fread(input_file_id, 'ubit8');
-input = [116; 117; 116; 117; 118 ;116 ;117 ;118 ;119; 120; 116; 117];
+%input = [116; 117; 116; 117; 118 ;116 ;117 ;118 ;119; 120; 116; 117];
 fclose(input_file_id);
 
 %% Variables
@@ -14,6 +14,7 @@ input_size = size(input, 1);        % Total number of characters
 input_pointer = 1;                  % Points the current character analized
 pointer_offset = 0;                 % Offset for point the dictionaries
 dictionary = {};                    % Dictionary
+total_bits = 0;                     % Number of bits saved in the file
 output_file_id = fopen(filenameOutputCompressed, 'a');
 
 %% Algorithm description
@@ -134,14 +135,15 @@ while  input_pointer <= input_size
         i_entry_found = size(dictionary,1);
         
         % Precision needed to codify the dictionary entry
-        size_dictionary = size(dictionary,1)
+        size_dictionary = size(dictionary,1);
         size_dictionary_bin = dec2bin(size_dictionary);
         num_bits = size(size_dictionary_bin,2);
-        precision = strcat('ubit',num2str(num_bits))
+        precision = strcat('ubit',num2str(num_bits));
 
         % Save the codeword
         fwrite(output_file_id, i_entry_found, precision);
         fwrite(output_file_id, input(input_pointer,1),'ubit8');
+        total_bits = total_bits + num_bits + 8;
         
         % Update input pointer
         input_pointer = input_pointer + 1;
@@ -155,14 +157,15 @@ while  input_pointer <= input_size
             dictionary{end + 1,1} = [entry_found next_input_after_entry];
         
             % Precision needed to codify the dictionary entry
-            size_dictionary = size(dictionary,1)
+            size_dictionary = size(dictionary,1);
             size_dictionary_bin = dec2bin(size_dictionary);
             num_bits = size(size_dictionary_bin,2);
-            precision = strcat('ubit',num2str(num_bits))
+            precision = strcat('ubit',num2str(num_bits));
         
             % Save the codeword
             fwrite(output_file_id, i_entry_found, precision);
             fwrite(output_file_id, input(i_next_input_after_entry,1),'ubit8');
+            total_bits = total_bits + num_bits + 8;
             
         else
             % If the end of the input is reached, the entry to find is
@@ -171,9 +174,24 @@ while  input_pointer <= input_size
             % even. The decoder will not find the next one and will asume
             % that it's finished.
 
-            % Save the codeword; precision is 8 bits for the last word in
-            % any case
-            fwrite(output_file_id, i_entry_found, 'ubit8');
+            % Save the codeword; precision will depends on the already bits
+            % saved in orther to save an even number of them.
+            % Precision needed to codify the dictionary entry
+            size_dictionary = size(dictionary,1);
+            size_dictionary_bin = dec2bin(size_dictionary);
+            num_bits = size(size_dictionary_bin,2);
+            total_bits = total_bits + num_bits;
+            odd_bits = mod(total_bits,8);
+            if odd_bits == 0
+                % Just 8 bits
+                precision = strcat('ubit',num2str(num_bits));
+            else
+                bits_left = 8 - odd_bits;
+                precision = strcat('ubit',num2str(num_bits + bits_left));
+                total_bits = total_bits + bits_left;
+            end
+            
+            fwrite(output_file_id, i_entry_found, precision);
         end
 
         % Depending of the value of pointer_offset alue, if the entry is
@@ -181,7 +199,6 @@ while  input_pointer <= input_size
         % uploaded 
         input_pointer = input_pointer + (size(entry_found,2) + 1);
     end
-
 end
 
 %% Close output file
