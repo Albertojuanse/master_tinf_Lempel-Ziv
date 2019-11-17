@@ -97,6 +97,49 @@ while 1
 
 end
 
+% The while loop breaked because there is only one codeword left; must
+% retrieve that one
+% Same routine one last time
+
+
+
+% Precision needed to decodify the dictionary next entry; when the
+% codeword is coded, the dictionary have an extra entry there.
+dictionary_size = size(dictionary,1);
+next_size_dictionary = size(dictionary,1) + 1;
+next_size_dictionary_bin = dec2bin(next_size_dictionary);
+next_num_bits = size(next_size_dictionary_bin,2);
+next_total_bits = total_bits + next_num_bits;
+next_odd_bits = mod(next_total_bits,8);
+if next_odd_bits == 0
+    % Just 8 bits
+    precision = strcat('ubit',num2str(next_num_bits));
+    
+else
+    next_bits_left = 8 - next_odd_bits;
+    precision = strcat('ubit',num2str(next_num_bits + next_bits_left));
+    next_total_bits = next_total_bits + next_bits_left;
+end
+
+% Retrieve the dictionary index
+i_entry_retrieved = fread(input_file_id, 1, precision);
+
+entry_retrieved = fread(input_file_id, 1, 'ubit8');
+
+% If the entry exists in the dictionary, use it; if not, create it
+% before use it.
+if i_entry_retrieved > dictionary_size
+    % ERROR; CAN'T HAPPEN
+    fwrite(output_file_id, [69; 82; 82; 79; 82],'ubit8');
+else    
+    entry_found = dictionary{i_entry_retrieved};
+    dictionary{end + 1,1} = [entry_found entry_retrieved];
+    fwrite(output_file_id, [output; transpose(entry_found); entry_retrieved],'ubit8');
+end
+
+% Count the bits retrieved
+total_bits = next_total_bits;
+
 %% Close input and output files
 fclose(input_file_id);
 fclose(output_file_id);

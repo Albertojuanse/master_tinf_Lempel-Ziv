@@ -200,7 +200,6 @@ while  input_pointer <= input_size
         input_pointer = input_pointer + (size(entry_found,2) + 1);
     end
 end
-
 %% Close output file
 fclose(output_file_id);
 
