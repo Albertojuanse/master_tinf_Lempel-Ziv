@@ -127,15 +127,21 @@ while  input_pointer <= input_size
         % preinicializado; llevar un conteo
     end
     
-    % Upload the dictionary
+    % Upload the dictionary and save the codeword
     if i_entry_found < 0
         % No entry found
         dictionary{end + 1,1} = [input(input_pointer,1)];
         i_entry_found = size(dictionary,1);
         
-        % Compose the codeword
-        codeword = [i_entry_found input(input_pointer,1)];
-        fwrite(output_file_id, codeword,'ubit8');
+        % Precision needed to codify the dictionary entry
+        size_dictionary = size(dictionary,1)
+        size_dictionary_bin = dec2bin(size_dictionary);
+        num_bits = size(size_dictionary_bin,2);
+        precision = strcat('ubit',num2str(num_bits))
+
+        % Save the codeword
+        fwrite(output_file_id, i_entry_found, precision);
+        fwrite(output_file_id, input(input_pointer,1),'ubit8');
         
         % Update input pointer
         input_pointer = input_pointer + 1;
@@ -148,20 +154,26 @@ while  input_pointer <= input_size
             next_input_after_entry = input(i_next_input_after_entry,1);
             dictionary{end + 1,1} = [entry_found next_input_after_entry];
         
-            % Compose the codeword        
-            codeword = [i_entry_found input(i_next_input_after_entry,1)];
-            fwrite(output_file_id, codeword,'ubit8');
+            % Precision needed to codify the dictionary entry
+            size_dictionary = size(dictionary,1)
+            size_dictionary_bin = dec2bin(size_dictionary);
+            num_bits = size(size_dictionary_bin,2);
+            precision = strcat('ubit',num2str(num_bits))
+        
+            % Save the codeword
+            fwrite(output_file_id, i_entry_found, precision);
+            fwrite(output_file_id, input(i_next_input_after_entry,1),'ubit8');
+            
         else
             % If the end of the input is reached, the entry to find is
             % the one which is exactly the rest of the input and there is
             % not a next entry; the file ends with the entry and so its not
-            % even. The decodifier wil bot find the next one and will asume
+            % even. The decoder will not find the next one and will asume
             % that it's finished.
-            i_next_input_after_entry = input_pointer + size(entry_found,2);
-            
-            % Compose the codeword
-            codeword = [i_entry_found];
-            fwrite(output_file_id, codeword,'ubit8');
+
+            % Save the codeword; precision is 8 bits for the last word in
+            % any case
+            fwrite(output_file_id, i_entry_found, 'ubit8');
         end
 
         % Depending of the value of pointer_offset alue, if the entry is
