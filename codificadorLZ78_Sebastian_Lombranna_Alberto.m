@@ -13,7 +13,8 @@ fclose(input_file_id);
 input_size = size(input, 1);        % Total number of characters
 input_pointer = 1;                  % Points the current character analized
 pointer_offset = 0;                 % Offset for point the dictionaries
-dictionary = {};                    % Dictionary
+dictionary = cell(input_size,1);    % Dictionary
+pointer_dictionary = 0;             % Size and last entry
 total_bits = 0;                     % Number of bits saved in the file
 output_file_id = fopen(filenameOutputCompressed, 'a');
 
@@ -74,9 +75,8 @@ while  input_pointer <= input_size
     % For each entry of the dictionary
     candidate_entry_found = false;
     i_entry_found = -1;
-    size_dictionary = size(dictionary, 1);
     
-    for i_entry = 1:size_dictionary
+    for i_entry = 1:pointer_dictionary
         entry = dictionary{i_entry};
         entry_size = size(entry, 2);
         
@@ -123,20 +123,17 @@ while  input_pointer <= input_size
         end
         % OJO: break en el momento que se encuentre una cadena del tamaño
         % máximo almacenado
-        %
-        % OJO: break en el momento que se finalice el diccionario
-        % preinicializado; llevar un conteo
     end
     
     % Upload the dictionary and save the codeword
     if i_entry_found < 0
         % No entry found
-        dictionary{end + 1,1} = [input(input_pointer,1)];
+        pointer_dictionary = pointer_dictionary + 1;
+        dictionary{pointer_dictionary,1} = [input(input_pointer,1)];
         i_entry_found = size(dictionary,1);
         
         % Precision needed to codify the dictionary entry
-        size_dictionary = size(dictionary,1);
-        size_dictionary_bin = dec2bin(size_dictionary);
+        size_dictionary_bin = dec2bin(pointer_dictionary);
         num_bits = size(size_dictionary_bin,2);
         precision = strcat('ubit',num2str(num_bits));
 
@@ -154,11 +151,11 @@ while  input_pointer <= input_size
         if input_pointer + size(entry_found,2) +1 <= input_size
             i_next_input_after_entry = input_pointer + size(entry_found,2);
             next_input_after_entry = input(i_next_input_after_entry,1);
-            dictionary{end + 1,1} = [entry_found next_input_after_entry];
+            pointer_dictionary = pointer_dictionary + 1;
+            dictionary{pointer_dictionary,1} = [entry_found next_input_after_entry];
         
             % Precision needed to codify the dictionary entry
-            size_dictionary = size(dictionary,1);
-            size_dictionary_bin = dec2bin(size_dictionary);
+            size_dictionary_bin = dec2bin(pointer_dictionary);
             num_bits = size(size_dictionary_bin,2);
             precision = strcat('ubit',num2str(num_bits));
         
@@ -177,8 +174,7 @@ while  input_pointer <= input_size
             % Save the codeword; precision will depends on the already bits
             % saved in orther to save an even number of them.
             % Precision needed to codify the dictionary entry
-            size_dictionary = size(dictionary,1);
-            size_dictionary_bin = dec2bin(size_dictionary);
+            size_dictionary_bin = dec2bin(pointer_dictionary);
             num_bits = size(size_dictionary_bin,2);
             total_bits = total_bits + num_bits;
             odd_bits = mod(total_bits,8);
@@ -199,7 +195,10 @@ while  input_pointer <= input_size
         % uploaded 
         input_pointer = input_pointer + (size(entry_found,2) + 1);
     end
+    input_pointer
+    total_bits
 end
+
 %% Close output file
 fclose(output_file_id);
 
