@@ -15,6 +15,7 @@ input_pointer = 1;                  % Points the current character analized
 pointer_offset = 0;                 % Offset for point the dictionaries
 dictionary = cell(input_size,1);    % Dictionary
 pointer_dictionary = 0;             % Size and last entry
+max_entry_size_dictionary = 0;      % Maximum size of entries in dictionary
 total_bits = 0;                     % Number of bits saved in the file
 output_file_id = fopen(filenameOutputCompressed, 'a');
 
@@ -118,7 +119,15 @@ while  input_pointer <= input_size
 
                 if new_candidate_entry_size > last_entry_found_size
                     i_entry_found = i_entry;
+                    
+                    % If this new size is the largest size in the
+                    % dictionary, this entry is the one searched
+                    if new_candidate_entry_size == max_entry_size_dictionary
+                        break;
+                    end
+                    
                 end
+                
             end
         end
         % OJO: break en el momento que se encuentre una cadena del tamaño
@@ -131,6 +140,11 @@ while  input_pointer <= input_size
         pointer_dictionary = pointer_dictionary + 1;
         dictionary{pointer_dictionary,1} = [input(input_pointer,1)];
         i_entry_found = size(dictionary,1);
+        % Update max size entry
+        new_max_entry_size_dictionary = size([input(input_pointer,1)]);
+        if new_max_entry_size_dictionary > max_entry_size_dictionary
+            max_entry_size_dictionary = new_max_entry_size_dictionary;
+        end
         
         % Precision needed to codify the dictionary entry
         size_dictionary_bin = dec2bin(pointer_dictionary);
@@ -152,7 +166,13 @@ while  input_pointer <= input_size
             i_next_input_after_entry = input_pointer + size(entry_found,2);
             next_input_after_entry = input(i_next_input_after_entry,1);
             pointer_dictionary = pointer_dictionary + 1;
-            dictionary{pointer_dictionary,1} = [entry_found next_input_after_entry];
+            dictionary{pointer_dictionary,1} = [entry_found next_input_after_entry];            
+            % Update max size entry
+            new_max_entry_size_dictionary = size([input(input_pointer,1)]);
+            if new_max_entry_size_dictionary > max_entry_size_dictionary
+                max_entry_size_dictionary = new_max_entry_size_dictionary;
+            end
+        
         
             % Precision needed to codify the dictionary entry
             size_dictionary_bin = dec2bin(pointer_dictionary);
