@@ -177,7 +177,6 @@ while  input_pointer <= input_size
     end
     
 end
-total_bits
 %% Close output file
 fclose(output_file_id);
 
