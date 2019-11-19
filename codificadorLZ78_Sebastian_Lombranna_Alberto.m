@@ -215,8 +215,6 @@ while  input_pointer <= input_size
         % uploaded 
         input_pointer = input_pointer + (size(entry_found,2) + 1);
     end
-    input_pointer
-    total_bits
 end
 
 %% Close output file
