@@ -13,8 +13,8 @@ fclose(input_file_id);
 input_size = size(input, 1);        % Total number of characters
 input_pointer = 1;                  % Points the current character analized
 pointer_offset = 0;                 % Offset for point the dictionaries
-dictionary = cell(input_size,1);    % Dictionary
-pointer_dictionary = 0;             % Size and last entry
+dictionary = containers.Map;        % Dictionary
+i_entry = 0;                        % Dictionary index
 max_entry_size_dictionary = 0;      % Maximum size of entries in dictionary
 total_bits = 0;                     % Number of bits saved in the file
 output_file_id = fopen(filenameOutputCompressed, 'a');
@@ -72,117 +72,78 @@ while  input_pointer <= input_size
     %     [2]   ;
     %     [2 3]
     %   }
-
-    % For each entry of the dictionary
-    candidate_entry_found = false;
-    i_entry_found = -1;
-    
-    for i_entry = 1:pointer_dictionary
-        entry = dictionary{i_entry};
-        entry_size = size(entry, 2);
         
-        % Inspec the entry for searching if the first character is the
-        % searched one;
-        % then, if so, verify the second character and so on.
-        for i_entry_character = 1:entry_size
-
-            character = entry(1, i_entry_character);
-
-            % The input character analyzed is the current if is the first
-            % entry, the current+1 if its the second...                
-            pointer_offset = (i_entry_character - 1);
-
-            if input_pointer + pointer_offset <= input_size
-                if character == input(input_pointer + pointer_offset,1)
-                    % This character is equals to the entry one.
-                    candidate_entry_found = true;
-                else                    
-                    % This character is not equals to the entry one.
-                    candidate_entry_found = false;
-                    break;
-                end
-            else
-                % If the end of the input is reached, the entry to find is
-                % the one which is exactly the rest of the input, so find it 
-                candidate_entry_found = false;
-                break;
-            end
+    % Inspec the entry for searching if the first character is the
+    % searched one;
+    % then, if so, verify the second character and so on.
+    searched_entry = [];
+    i_entry_found = -1;
+    entry_found = [];
+    pointer_offset = 0;
+    flag_entry_found = true;
+    while flag_entry_found
+        
+        try
+        	searched_entry = [searched_entry input(input_pointer + pointer_offset,1)];
+            i_entry_found = dictionary(num2str(searched_entry));
+            entry_found = searched_entry;
+        catch exception
+            flag_entry_found = false;
+            break;
         end
-
-        % Refresh the entry found if this one is longer than the previous one
-        if candidate_entry_found
-            if i_entry_found < 0
-                i_entry_found = i_entry;
-            else
-                last_entry_found_size = size(dictionary{i_entry_found}, 2);
-                new_candidate_entry_size = size(dictionary{i_entry}, 2);
-
-                if new_candidate_entry_size > last_entry_found_size
-                    i_entry_found = i_entry;
-                    
-                    % If this new size is the largest size in the
-                    % dictionary, this entry is the one searched
-                    if new_candidate_entry_size == max_entry_size_dictionary
-                        break;
-                    end
-                    
-                end
-                
-            end
-        end
-        % OJO: break en el momento que se encuentre una cadena del tamaño
-        % máximo almacenado
+        
+        pointer_offset = pointer_offset + 1;
+        
     end
     
     % Upload the dictionary and save the codeword
     if i_entry_found < 0
         % No entry found
-        pointer_dictionary = pointer_dictionary + 1;
-        dictionary{pointer_dictionary,1} = [input(input_pointer,1)];
-        i_entry_found = size(dictionary,1);
-        % Update max size entry
-        new_max_entry_size_dictionary = size([input(input_pointer,1)]);
-        if new_max_entry_size_dictionary > max_entry_size_dictionary
-            max_entry_size_dictionary = new_max_entry_size_dictionary;
-        end
         
-        % Precision needed to codify the dictionary entry
-        size_dictionary_bin = dec2bin(pointer_dictionary);
-        num_bits = size(size_dictionary_bin,2);
+        i_entry = i_entry + 1;
+        entry_found = searched_entry;
+        dictionary(num2str(entry_found)) = i_entry;
+        i_entry_found = i_entry;
+        
+        % Precision needed to codify the maximum dictionary entry
+        % posible
+        i_entry_bin = dec2bin(i_entry);
+        num_bits = size(i_entry_bin,2);
         precision = strcat('ubit',num2str(num_bits));
 
         % Save the codeword
         fwrite(output_file_id, i_entry_found, precision);
-        fwrite(output_file_id, input(input_pointer,1),'ubit8');
+        fwrite(output_file_id, entry_found,'ubit8');
         total_bits = total_bits + num_bits + 8;
         
-        % Update input pointer
-        input_pointer = input_pointer + 1;
+        % Depending of the value of pointer_offset value, if the entry is
+        % found and a new codeword is compose, the input_pointer must be
+        % uploaded.
+        input_pointer = input_pointer + pointer_offset + 1;
 
     else
-        % Entry found
-        entry_found = dictionary{i_entry_found};
-        if input_pointer + size(entry_found,2) +1 <= input_size
-            i_next_input_after_entry = input_pointer + size(entry_found,2);
-            next_input_after_entry = input(i_next_input_after_entry,1);
-            pointer_dictionary = pointer_dictionary + 1;
-            dictionary{pointer_dictionary,1} = [entry_found next_input_after_entry];            
-            % Update max size entry
-            new_max_entry_size_dictionary = size([input(input_pointer,1)]);
-            if new_max_entry_size_dictionary > max_entry_size_dictionary
-                max_entry_size_dictionary = new_max_entry_size_dictionary;
-            end
-        
-        
-            % Precision needed to codify the dictionary entry
-            size_dictionary_bin = dec2bin(pointer_dictionary);
-            num_bits = size(size_dictionary_bin,2);
+        % Entry found was saved while searching it
+        if input_pointer + pointer_offset < input_size
+            i_next_input_after_entry_found = input_pointer + pointer_offset;
+            next_input_after_entry_found = input(i_next_input_after_entry_found,1);
+            i_entry = i_entry + 1;
+            dictionary(num2str([entry_found next_input_after_entry_found])) = i_entry;
+            
+            % Precision needed to codify the maximum dictionary entry
+            % posible
+            i_entry_bin = dec2bin(i_entry);
+            num_bits = size(i_entry_bin,2);
             precision = strcat('ubit',num2str(num_bits));
-        
+            
             % Save the codeword
             fwrite(output_file_id, i_entry_found, precision);
-            fwrite(output_file_id, input(i_next_input_after_entry,1),'ubit8');
+            fwrite(output_file_id, next_input_after_entry_found,'ubit8');
             total_bits = total_bits + num_bits + 8;
+            
+            % Depending of the value of pointer_offset value, if the entry is
+            % found and a new codeword is compose, the input_pointer must be
+            % uploaded.
+            input_pointer = input_pointer + pointer_offset + 1;
             
         else
             % If the end of the input is reached, the entry to find is
@@ -194,8 +155,8 @@ while  input_pointer <= input_size
             % Save the codeword; precision will depends on the already bits
             % saved in orther to save an even number of them.
             % Precision needed to codify the dictionary entry
-            size_dictionary_bin = dec2bin(pointer_dictionary);
-            num_bits = size(size_dictionary_bin,2);
+            i_entry_found_bin = dec2bin(i_entry);
+            num_bits = size(i_entry_found_bin,2);
             total_bits = total_bits + num_bits;
             odd_bits = mod(total_bits,8);
             if odd_bits == 0
@@ -208,15 +169,15 @@ while  input_pointer <= input_size
             end
             
             fwrite(output_file_id, i_entry_found, precision);
+            
+            break;
         end
 
-        % Depending of the value of pointer_offset alue, if the entry is
-        % found and a new codeword is compose, the input_pointer must be
-        % uploaded 
-        input_pointer = input_pointer + (size(entry_found,2) + 1);
+        
     end
+    
 end
-
+total_bits
 %% Close output file
 fclose(output_file_id);
 
