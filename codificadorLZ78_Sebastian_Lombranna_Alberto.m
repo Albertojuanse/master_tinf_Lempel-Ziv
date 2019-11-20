@@ -157,7 +157,4 @@ end
 %% Close the output file
 fclose(output_file_id);
 
-
-
 end
-

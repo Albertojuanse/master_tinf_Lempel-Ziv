@@ -1,4 +1,4 @@
-clear all;
+    clear all;
 tic;
 delete coder_output2;
 delete decoder_output2;

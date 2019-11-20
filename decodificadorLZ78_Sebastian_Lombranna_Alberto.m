@@ -63,12 +63,12 @@ while 1
         if i_entry_retrieved > i_entry
             i_entry = i_entry + 1;
             dictionary(num2str(i_entry)) = entry_retrieved;
-            fwrite(output_file_id, entry_retrieved,'ubit8');        
+            fwrite(output_file_id, entry_retrieved,'ubit8');
         else
             entry_found = dictionary(num2str(i_entry_retrieved));
             i_entry = i_entry + 1;
             dictionary(num2str(i_entry)) = [entry_found entry_retrieved];
-            fwrite(output_file_id, [transpose(entry_found); entry_retrieved],'ubit8');
+            fwrite(output_file_id, transpose(entry_found),'ubit8');
         end
         break;
     end
