@@ -25,3 +25,11 @@ input_file_id = fopen('decoder_output', 'r');
 decoder_output_bits = count * 8
 fclose(input_file_id );
 tiempo_decodificador = toc
+
+input_file_id = fopen('prueba', 'w+');
+fwrite(input_file_id, [80 65],'ubit8');
+fseek(input_file_id, 0, 'bof');
+fwrite(input_file_id, [112 97],'ubit8');
+fclose(input_file_id);
+
+
