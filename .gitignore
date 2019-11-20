@@ -24,4 +24,6 @@ octave-workspace
 # others
 coder_output
 decoder_output
+coder_outputW
+decoder_outputW
 GYP.txt
