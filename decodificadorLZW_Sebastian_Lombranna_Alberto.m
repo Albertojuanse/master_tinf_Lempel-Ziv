@@ -25,8 +25,8 @@ output_file_id = fopen(filenameOutputUncompressed, 'a');
 
 % First symbol extraction
 last_i_entry_retrieved = fread(input_file_id, 1, 'ubit16');
-last_entry_retrieved = dictionary(num2str(last_i_entry_retrieved));
-fwrite(output_file_id, last_entry_retrieved,'ubit8');
+last_entry_found = dictionary(num2str(last_i_entry_retrieved));
+fwrite(output_file_id, last_entry_found, 'ubit8');
 
 % For every bit in the file
 while 1
@@ -55,8 +55,9 @@ while 1
     fwrite(output_file_id, transpose(entry_found),'ubit8');
     
     % Update the dictionary
-    i_entry = i_entry + 1;    
-    dictionary(num2str(i_entry)) = [entry_found entry_retrieved];
+    i_entry = i_entry + 1; 
+    dictionary(num2str(i_entry)) = [last_entry_found entry_found];
+    last_entry_found =  entry_found(1);
     
      % Count the bits retrieved
     total_bits = total_bits + num_bits;
