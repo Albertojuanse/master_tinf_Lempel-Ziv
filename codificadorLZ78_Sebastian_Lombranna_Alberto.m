@@ -15,9 +15,7 @@ input_pointer = 1;                  % Points the current character analized
 pointer_offset = 0;                 % Offset for point the dictionaries
 dictionary = containers.Map;        % Dictionary
 i_entry = 0;                        % Dictionary index
-max_entry_size_dictionary = 0;      % Maximum size of entries in dictionary
 total_bits = 0;                     % Number of bits saved in the file
-output = zeros(input_size);         % Preallocated output collection
 output_file_id = fopen(filenameOutputCompressed, 'a');
 
 %% Algorithm description
