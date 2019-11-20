@@ -58,6 +58,9 @@ while 1
     if size(entry_retrieved, 2) == 0
         break;
     end
+    if entry_retrieved== 0
+        break;
+    end
     
     % If the entry exists in the dictionary, use it; if not, create it
     % before use it.
@@ -94,7 +97,7 @@ while 1
         next_total_bits = next_total_bits + next_bits_left;
     end
     
-    if next_total_bits == input_size_bits
+    if next_total_bits >= input_size_bits
         
         % Last execution
         
@@ -113,15 +116,14 @@ while 1
         % If the entry exists in the dictionary, use it; if not, create it
         % before use it.
         if i_entry_retrieved > next_i_entry
-            % ERROR; CAN'T HAPPEN
             i_entry = i_entry + 1;
             dictionary(num2str(i_entry)) = entry_retrieved;
             fwrite(output_file_id, entry_retrieved,'ubit8');    
-            fwrite(output_file_id, [69; 82; 82; 79; 82],'ubit8');
         else    
             entry_found = dictionary(num2str(i_entry_retrieved));
             i_entry = i_entry + 1;
             dictionary(num2str(i_entry,1)) = [entry_found entry_retrieved];
+            [transpose(entry_found); entry_retrieved]
             fwrite(output_file_id, [transpose(entry_found); entry_retrieved],'ubit8');
         end
 

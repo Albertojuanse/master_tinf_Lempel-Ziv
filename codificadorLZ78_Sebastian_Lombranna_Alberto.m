@@ -83,11 +83,16 @@ while  input_pointer <= input_size
     flag_entry_found = true;
     while flag_entry_found
         
-        try
-        	searched_entry = [searched_entry input(input_pointer + pointer_offset,1)];
-            i_entry_found = dictionary(num2str(searched_entry));
-            entry_found = searched_entry;
-        catch exception
+        if (input_pointer + pointer_offset <= input_size)
+            try
+                searched_entry = [searched_entry input(input_pointer + pointer_offset,1)];
+                i_entry_found = dictionary(num2str(searched_entry));
+                entry_found = searched_entry;
+            catch exception
+                flag_entry_found = false;
+                break;
+            end
+        else
             flag_entry_found = false;
             break;
         end
@@ -114,6 +119,7 @@ while  input_pointer <= input_size
         % Save the codeword
         fwrite(output_file_id, i_entry_found, precision);
         fwrite(output_file_id, entry_found,'ubit8');
+        flag_last_byte = true;
         total_bits = total_bits + num_bits + 8;
         
         % Depending of the value of pointer_offset value, if the entry is
@@ -123,60 +129,79 @@ while  input_pointer <= input_size
 
     else
         % Entry found was saved while searching it
-        if input_pointer + pointer_offset < input_size
+        if input_pointer + pointer_offset <= input_size
             i_next_input_after_entry_found = input_pointer + pointer_offset;
-            next_input_after_entry_found = input(i_next_input_after_entry_found,1);
+            next_input_after_entry_found = input(i_next_input_after_entry_found,1);            
             i_entry = i_entry + 1;
             dictionary(num2str([entry_found next_input_after_entry_found])) = i_entry;
-            
-            % Precision needed to codify the maximum dictionary entry
-            % posible
-            i_entry_bin = dec2bin(i_entry);
-            num_bits = size(i_entry_bin,2);
-            precision = strcat('ubit',num2str(num_bits));
-            
-            % Save the codeword
-            fwrite(output_file_id, i_entry_found, precision);
-            fwrite(output_file_id, next_input_after_entry_found,'ubit8');
-            total_bits = total_bits + num_bits + 8;
-            
-            % Depending of the value of pointer_offset value, if the entry is
-            % found and a new codeword is compose, the input_pointer must be
-            % uploaded.
-            input_pointer = input_pointer + pointer_offset + 1;
-            
-        else
-            % If the end of the input is reached, the entry to find is
-            % the one which is exactly the rest of the input and there is
-            % not a next entry; the file ends with the entry and so its not
-            % even. The decoder will not find the next one and will asume
-            % that it's finished.
-
-            % Save the codeword; precision will depends on the already bits
-            % saved in orther to save an even number of them.
-            % Precision needed to codify the dictionary entry
-            i_entry_found_bin = dec2bin(i_entry);
-            num_bits = size(i_entry_found_bin,2);
-            total_bits = total_bits + num_bits;
-            odd_bits = mod(total_bits,8);
-            if odd_bits == 0
-                % Just 8 bits
-                precision = strcat('ubit',num2str(num_bits));
-            else
-                bits_left = 8 - odd_bits;
-                precision = strcat('ubit',num2str(num_bits + bits_left));
-                total_bits = total_bits + bits_left;
-            end
-            
-            fwrite(output_file_id, i_entry_found, precision);
-            
-            break;
         end
-
+            
+        % Precision needed to codify the maximum dictionary entry posible
+        i_entry_bin = dec2bin(i_entry);
+        num_bits = size(i_entry_bin,2);
+        precision = strcat('ubit',num2str(num_bits));
+            
+        % Save the codeword
+        fwrite(output_file_id, i_entry_found, precision);
+        total_bits = total_bits + num_bits;
+        flag_last_byte = false;
+        if input_pointer + pointer_offset < input_size
+            fwrite(output_file_id, next_input_after_entry_found,'ubit8');
+            total_bits = total_bits + 8;
+            flag_last_byte = true;
+        end
+            
+        % Depending of the value of pointer_offset value, if the entry is
+        % found and a new codeword is compose, the input_pointer must be
+        % uploaded.
+        input_pointer = input_pointer + pointer_offset + 1;
         
     end
     
 end
+
+
+total_bits
+searched_entry
+entry_found
+next_input_after_entry_found
+
+% If the end of the input is reached but the number of bits is not
+% 'byte even', multiple of 8, the machine will remove the last ones or
+% complete with zeros. Last precision must depend on the already saved
+% bits in orther to save an even number of them.
+if mod(total_bits,8) ~= 0
+    % rewind    
+    total_bits = total_bits - num_bits;
+    if flag_last_byte
+        total_bits = total_bits - 8;
+    end
+    input_pointer = input_pointer - pointer_offset - 1;
+    fseek(output_file_id, total_bits/8, 'bof');
+    
+    % Odd bits
+    total_bits = total_bits + num_bits + 8;
+    odd_bits = mod(total_bits,8);
+    if odd_bits == 0
+        % Just 8 bits
+    else
+        bits_left = 8 - odd_bits;
+        precision = strcat('ubit',num2str(bits_left));
+        total_bits = total_bits + bits_left;
+        fwrite(output_file_id, 0, precision);
+        % If was not written any ascii, writte a dummy one
+        if flag_last_byte            
+            fwrite(output_file_id, 4, 'ubit8');
+        end
+    end
+    
+end
+
+total_bits
+searched_entry
+entry_found
+next_input_after_entry_found
+
 %% Close output file
 fclose(output_file_id);
 
