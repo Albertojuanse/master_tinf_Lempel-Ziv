@@ -31,6 +31,7 @@ end
 % for the entries analyzed
 
 % First symbol reading
+searched_entry = input(input_pointer);
 
 while  input_pointer <= input_size
     
@@ -68,7 +69,6 @@ while  input_pointer <= input_size
     % Upload the dictionary and save the codeword
     if i_entry_found < 0
         % No entry found; this can't happen in LZW
-        i_entry_found
 
     else
         % Entry found was saved while searching it
@@ -77,8 +77,6 @@ while  input_pointer <= input_size
             next_input_after_entry_found = input(i_next_input_after_entry_found,1);            
             i_entry = i_entry + 1;
             dictionary(num2str([entry_found next_input_after_entry_found])) = i_entry;
-        else            
-            next_input_after_entry_found = 0;
         end
             
         % Precision needed to codify the maximum dictionary entry posible

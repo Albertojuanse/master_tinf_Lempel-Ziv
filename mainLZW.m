@@ -2,7 +2,7 @@ clear all;
 tic;
 delete coder_outputW;
 delete decoder_outputW;
-codificadorLZW_Sebastian_Lombranna_Alberto('input','coder_outputW');
+codificadorLZW_Sebastian_Lombranna_Alberto('input2','coder_outputW');
 
 tiempo_codificador = toc
 tic;

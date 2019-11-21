@@ -45,18 +45,6 @@ output_file_id = fopen(filenameOutputCompressed, 'a');
 % OJO: break en el momento que se finalice el diccionario
 % preinicializado; llevar un conteo
 
-% -> str_cmp
-% -> dec2bin(,8) <- 8 bits ; uint8() lo satura
-% -> ojo con parseing a más 
-% -> dec2bin( id_entrada , ceil(log2(id_entrada)))
-
-% Sictionary schematic:
-%   { [1]   ;
-%     [1 2] ;
-%     [2]   ;
-%     [2 3]
-%   }
-
 %% Execution
 
 % The algorithm will analyze each character one by one, using a pointers
@@ -65,12 +53,6 @@ while  input_pointer <= input_size
     
     % Search the current input and following until a codeword can be
     % generated
-    % Dictionary schematic:
-    %   { [1]   ;
-    %     [1 2] ;
-    %     [2]   ;
-    %     [2 3]
-    %   }
         
     % Inspec the entry for searching if the first character is the
     % searched one;

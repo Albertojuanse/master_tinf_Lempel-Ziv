@@ -12,27 +12,6 @@ dictionary = containers.Map;        % Dictionary
 i_entry = 0;                        % Dictionary index
 total_bits = 0;                     % Bits of the file already readed
 
-%% 
-
-%input_file_id = fopen(filenameInputCompressed, 'r');
-%input = [];
-%input = [input fread(input_file_id, 1, 'ubit1')];
-%input = [input fread(input_file_id, 1, 'ubit8')];
-%input = [input fread(input_file_id, 1, 'ubit2')];
-%input = [input fread(input_file_id, 1, 'ubit8')];
-%input = [input fread(input_file_id, 1, 'ubit2')];
-%input = [input fread(input_file_id, 1, 'ubit8')];
-%input = [input fread(input_file_id, 1, 'ubit3')];
-%input = [input fread(input_file_id, 1, 'ubit8')];
-%input = [input fread(input_file_id, 1, 'ubit3')];
-%input = [input fread(input_file_id, 1, 'ubit8')];
-%input = [input fread(input_file_id, 1, 'ubit3')];
-%input = [input fread(input_file_id, 1, 'ubit8')];
-%input = [input fread(input_file_id, 1, 'ubit3')];
-%input = [input fread(input_file_id, 1, 'ubit8')];
-%input = [input fread(input_file_id, 1, 'ubit8')]
-%input = [1 116 2 117 1 117 4 118 3 118 6 119 7 120 3];
-
 %% Execution
 input_file_id = fopen(filenameInputCompressed, 'r');
 output_file_id = fopen(filenameOutputUncompressed, 'a');
@@ -94,8 +73,6 @@ while 1
     end
 
 end
-
-
 
 %% Close input and output files
 fclose(input_file_id);
