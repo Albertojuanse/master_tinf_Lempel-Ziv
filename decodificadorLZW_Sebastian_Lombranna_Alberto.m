@@ -42,22 +42,27 @@ while 1
     precision = strcat('ubit',num2str(num_bits));
 
     % Retrieve the dictionary index
-    i_entry_retrieved = fread(input_file_id, 1, precision);
+    i_entry_retrieved = fread(input_file_id, 1, precision)
     
     if size(i_entry_retrieved, 2) == 0
         break;
     end
     
     % Get the entry for the retrieved index
-    entry_found = dictionary(num2str(i_entry_retrieved));
+    try
+        entry_found = dictionary(num2str(i_entry_retrieved));
+    catch exception
+        % Preventing the symbol-symbol-collision issue
+        entry_found = [last_entry_found last_entry_found(1)];
+    end
     
     % Write the entry
     fwrite(output_file_id, transpose(entry_found),'ubit8');
     
     % Update the dictionary
     i_entry = i_entry + 1; 
-    dictionary(num2str(i_entry)) = [last_entry_found entry_found];
-    last_entry_found =  entry_found(1);
+    dictionary(num2str(i_entry)) = [last_entry_found entry_found(1)];
+    last_entry_found =  entry_found;
     
      % Count the bits retrieved
     total_bits = total_bits + num_bits;

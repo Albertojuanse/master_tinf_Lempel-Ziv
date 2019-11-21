@@ -30,6 +30,8 @@ end
 % The algorithm will analyze each character one by one, using a pointers
 % for the entries analyzed
 
+% First symbol reading
+
 while  input_pointer <= input_size
     
     % Search the current input and following until a codeword can be
