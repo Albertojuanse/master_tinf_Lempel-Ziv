@@ -31,70 +31,72 @@ end
 % for the entries analyzed
 
 % First symbol reading
-searched_entry = input(input_pointer);
+if input_size > 0
+    searched_entry = input(input_pointer);
 
-while  input_pointer <= input_size
-    
-    % Search the current input and following until a codeword can be
-    % generated
-        
-    % Inspec the entry for searching if the first character is the
-    % searched one;
-    % then, if so, verify the second character and so on.
-    searched_entry = [];
-    i_entry_found = -1;
-    entry_found = [];
-    pointer_offset = 0;
-    flag_entry_found = true;
-    while flag_entry_found
-        
-        if (input_pointer + pointer_offset <= input_size)
-            try
-                searched_entry = [searched_entry input(input_pointer + pointer_offset,1)];
-                i_entry_found = dictionary(num2str(searched_entry));
-                entry_found = searched_entry;
-            catch exception
+    while  input_pointer <= input_size
+
+        % Search the current input and following until a codeword can be
+        % generated
+
+        % Inspec the entry for searching if the first character is the
+        % searched one;
+        % then, if so, verify the second character and so on.
+        searched_entry = [];
+        i_entry_found = -1;
+        entry_found = [];
+        pointer_offset = 0;
+        flag_entry_found = true;
+        while flag_entry_found
+
+            if (input_pointer + pointer_offset <= input_size)
+                try
+                    searched_entry = [searched_entry input(input_pointer + pointer_offset,1)];
+                    i_entry_found = dictionary(num2str(searched_entry));
+                    entry_found = searched_entry;
+                catch exception
+                    flag_entry_found = false;
+                    break;
+                end
+            else
                 flag_entry_found = false;
                 break;
             end
-        else
-            flag_entry_found = false;
-            break;
-        end
-        
-        pointer_offset = pointer_offset + 1;
-        
-    end
-    
-    % Upload the dictionary and save the codeword
-    if i_entry_found < 0
-        % No entry found; this can't happen in LZW
 
-    else
-        % Entry found was saved while searching it
-        if input_pointer + pointer_offset <= input_size
-            i_next_input_after_entry_found = input_pointer + pointer_offset;
-            next_input_after_entry_found = input(i_next_input_after_entry_found,1);            
-            i_entry = i_entry + 1;
-            dictionary(num2str([entry_found next_input_after_entry_found])) = i_entry;
+            pointer_offset = pointer_offset + 1;
+
         end
-            
-        % Precision needed to codify the maximum dictionary entry posible
-        i_entry_bin = dec2bin(i_entry);
-        num_bits = 8*ceil(size(i_entry_bin,2)/8);
-        precision = strcat('ubit',num2str(num_bits));
-            
-        % Save the codeword
-        fwrite(output_file_id, i_entry_found, precision);
-        total_bits = total_bits + num_bits;
-            
-        % Depending of the value of pointer_offset value, if the entry is
-        % found and a new codeword is compose, the input_pointer must be
-        % uploaded.
-        input_pointer = input_pointer + pointer_offset;
-        
+
+        % Upload the dictionary and save the codeword
+        if i_entry_found < 0
+            % No entry found; this can't happen in LZW
+
+        else
+            % Entry found was saved while searching it
+            if input_pointer + pointer_offset <= input_size
+                i_next_input_after_entry_found = input_pointer + pointer_offset;
+                next_input_after_entry_found = input(i_next_input_after_entry_found,1);            
+                i_entry = i_entry + 1;
+                dictionary(num2str([entry_found next_input_after_entry_found])) = i_entry;
+            end
+
+            % Precision needed to codify the maximum dictionary entry posible
+            i_entry_bin = dec2bin(i_entry);
+            num_bits = 8*ceil(size(i_entry_bin,2)/8);
+            precision = strcat('ubit',num2str(num_bits));
+
+            % Save the codeword
+            fwrite(output_file_id, i_entry_found, precision);
+            total_bits = total_bits + num_bits;
+
+            % Depending of the value of pointer_offset value, if the entry is
+            % found and a new codeword is compose, the input_pointer must be
+            % uploaded.
+            input_pointer = input_pointer + pointer_offset;
+
+        end
+
     end
-    
 end
 %% Close the output file
 fclose(output_file_id);

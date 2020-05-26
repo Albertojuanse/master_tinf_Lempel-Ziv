@@ -11,67 +11,70 @@ input_size_bits = count * 8;        % Size of the input in bits
 dictionary = containers.Map;        % Dictionary
 i_entry = 0;                        % Dictionary index
 total_bits = 0;                     % Bits of the file already readed
+input_size = size(i, 1);            % Total number of characters
 
 %% Execution
 input_file_id = fopen(filenameInputCompressed, 'r');
 output_file_id = fopen(filenameOutputUncompressed, 'a');
 
 % For every bit in the file
-while 1
-    
-    % Each codeword is the composite of the dictionary entry index and the
-    % next character
-    
-    % Precision needed to decodify the dictionary next entry; when the
-    % codeword is coded, the dictionary have an extra entry there.
-    next_i_entry = i_entry + 1;
-    next_i_entry_bin = dec2bin(next_i_entry);
-    num_bits = 8*ceil(size(next_i_entry_bin,2)/8);
-    precision = strcat('ubit',num2str(num_bits));
+if input_size > 0
+    while 1
 
-    % Retrieve the dictionary index
-    i_entry_retrieved = fread(input_file_id, 1, precision);
-    
-    % The character is always saved with precision 'ubit8'
-    entry_retrieved = fread(input_file_id, 1, 'ubit8');
-    if size(entry_retrieved, 2) == 0
-        break;
-    end
-    % If finds a NULL character, is the last one (in this scenario)
-    if entry_retrieved== 0
+        % Each codeword is the composite of the dictionary entry index and the
+        % next character
+
+        % Precision needed to decodify the dictionary next entry; when the
+        % codeword is coded, the dictionary have an extra entry there.
+        next_i_entry = i_entry + 1;
+        next_i_entry_bin = dec2bin(next_i_entry);
+        num_bits = 8*ceil(size(next_i_entry_bin,2)/8);
+        precision = strcat('ubit',num2str(num_bits));
+
+        % Retrieve the dictionary index
+        i_entry_retrieved = fread(input_file_id, 1, precision);
+
+        % The character is always saved with precision 'ubit8'
+        entry_retrieved = fread(input_file_id, 1, 'ubit8');
+        if size(entry_retrieved, 2) == 0
+            break;
+        end
+        % If finds a NULL character, is the last one (in this scenario)
+        if entry_retrieved== 0
+            if i_entry_retrieved > i_entry
+                i_entry = i_entry + 1;
+                dictionary(num2str(i_entry)) = entry_retrieved;
+                fwrite(output_file_id, entry_retrieved,'ubit8');
+            else
+                entry_found = dictionary(num2str(i_entry_retrieved));
+                i_entry = i_entry + 1;
+                dictionary(num2str(i_entry)) = [entry_found entry_retrieved];
+                fwrite(output_file_id, transpose(entry_found),'ubit8');
+            end
+            break;
+        end
+
+        % If the entry exists in the dictionary, use it; if not, create it
+        % before use it.
         if i_entry_retrieved > i_entry
             i_entry = i_entry + 1;
             dictionary(num2str(i_entry)) = entry_retrieved;
-            fwrite(output_file_id, entry_retrieved,'ubit8');
+            fwrite(output_file_id, entry_retrieved,'ubit8');        
         else
             entry_found = dictionary(num2str(i_entry_retrieved));
             i_entry = i_entry + 1;
             dictionary(num2str(i_entry)) = [entry_found entry_retrieved];
-            fwrite(output_file_id, transpose(entry_found),'ubit8');
+            fwrite(output_file_id, [transpose(entry_found); entry_retrieved],'ubit8');
         end
-        break;
-    end
-    
-    % If the entry exists in the dictionary, use it; if not, create it
-    % before use it.
-    if i_entry_retrieved > i_entry
-        i_entry = i_entry + 1;
-        dictionary(num2str(i_entry)) = entry_retrieved;
-        fwrite(output_file_id, entry_retrieved,'ubit8');        
-    else
-        entry_found = dictionary(num2str(i_entry_retrieved));
-        i_entry = i_entry + 1;
-        dictionary(num2str(i_entry)) = [entry_found entry_retrieved];
-        fwrite(output_file_id, [transpose(entry_found); entry_retrieved],'ubit8');
-    end
-    
-    % Count the bits retrieved
-    total_bits = total_bits + num_bits + 8;
-    
-    if total_bits == input_size_bits
-        break;
-    end
 
+        % Count the bits retrieved
+        total_bits = total_bits + num_bits + 8;
+
+        if total_bits == input_size_bits
+            break;
+        end
+
+    end
 end
 
 %% Close input and output files
